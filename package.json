@@ -1,0 +1,37 @@
+{
+  "name": "devinit",
+  "publisher": "lkhai",
+  "displayName": "DevInit",
+  "description": "Automatically create and set up full-stack projects (MERN, MEAN, Next.js)",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onCommand:devinit.startSetup"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "devinit.startSetup",
+        "title": "DevInit: Start Setup Assistant"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "18.x",
+    "typescript": "^5.1.3"
+  }
+}
