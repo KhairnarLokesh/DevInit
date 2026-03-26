@@ -326,25 +326,26 @@ try {
     // Automation
     console.log(chalk.yellow('Installing dependencies and setting up React client... This may take a while.'));
     
-    // Commands sequence:
-    // 1. Install server deps
-    // 2. Create React App
-    // 3. Run our UI injection script
-    // 4. Install root dependencies (concurrently)
-    // 5. Start the full application locally
+    // Detect Frontend choice
+    const isVite = features.includes('Frontend:Vite');
+    const isTs = features.includes('TypeScript');
+    const frontendCmd = isVite 
+        ? 'npm create vite@latest client -- --template ' + (isTs ? 'react-ts' : 'react')
+        : 'npx create-react-app client';
+
     const commands = [
-        'mkdir server -ea 0', // inside powershell
+        'mkdir server -ea 0',
         'cd server',
         'npm init -y',
         'npm install express mongoose cors dotenv',
         'cd ..',
-        'npx create-react-app client',
+        frontendCmd,
         'node setup-ui.js',
-        'npm install concurrently --save-dev', // added explicitly!
+        'npm install concurrently --save-dev',
         'npm run dev'
     ];
     
-    runCommandsSequentially(commands, projectPath, `DevInit: ${projectName}`);
+    runCommandsSequentially(commands, projectPath, 'DevInit: ' + projectName);
 }
 
 module.exports = { setupMern };
