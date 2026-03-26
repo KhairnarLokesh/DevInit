@@ -1,28 +1,46 @@
-# DevInit
+# DevInit CLI
 
-Automatically create and set up full-stack projects (MERN, MEAN, Next.js) directly from your VS Code command palette!
+DevInit is a Next-Gen Stack Setup Assistant that automatically generates, sets up, and configures full-stack projects directly from your terminal!
 
 ## Features
 
-- Set up a new project in seconds.
-- Interactive project configuration using the command palette.
-- Generates boilerplate for:
-  - MERN Stack (MongoDB, Express, React, Node.js)
-  - MEAN Stack (MongoDB, Express, Angular, Node.js)
-  - Next.js
+- Set up a new project in seconds directly from the command line.
+- Beautiful, interactive terminal prompts.
+- Fully automated dependency installation and environment setup.
+- Generates fully-functional starter boilerplate for:
+  - **MERN Stack** (MongoDB, Express, React, Node.js)
+  - **MEAN Stack** (MongoDB, Express, Angular, Node.js)
+  - **Next.js** (App Router, optionally with Tailwind CSS)
+
+## Installation
+
+Ensure you have **Node.js** and **npm** installed on your system. 
+
+You can run DevInit locally by cloning this repository and linking it globally:
+
+```bash
+# Clone the repository and navigate into it
+git clone https://github.com/KhairnarLokesh/DevInit.git
+cd DevInit
+
+# Install dependencies and link globally
+npm install
+npm link
+```
 
 ## How to use
 
-1. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac).
-2. Type `DevInit: Start Setup Assistant` and hit enter.
-3. Follow the interactive prompts to generate your project.
+Simply open your terminal in the directory where you want to create your new project, and run:
 
-## Requirements
+```bash
+devinit
+```
 
-Ensure you have Node.js and `npm` installed and available in your terminal, as the extension will interact with the terminal to install dependencies.
+Follow the interactive prompts to:
+1. Choose your preferred stack (MERN, MEAN, Next.js).
+2. Enter your desired project name.
+3. Relax while DevInit constructs the folder structure, creates the boilerplate files, runs commands, installs dependencies, and injects a beautiful starting UI screen!
 
-## Release Notes
+## License
 
-### 1.0.0
-
-- Initial release of DevInit!
+ISC License
