@@ -1,9 +1,9 @@
 const chalk = require('chalk');
 const path = require('path');
-const { createDirectory, createFile } = require('../utils/fileUtils');
+const { createDirectory, createFile, appendToFile, readTemplate } = require('../utils/fileUtils');
 const { runCommandsSequentially } = require('../utils/terminalUtils');
 
-async function setupMern(projectPath, projectName, features) {
+async function setupMern(projectPath, projectName, features, database) {
     console.log(chalk.green('Creating MERN project structure...'));
     
     // Create Root
@@ -14,11 +14,38 @@ async function setupMern(projectPath, projectName, features) {
     const folders = ['controllers', 'models', 'routes', 'config', 'middleware'];
     folders.forEach(folder => createDirectory(path.join(serverPath, folder)));
 
+    // Database Setup
+    let dbDeps = '';
+    let dbInitCode = '';
+    let dbEnvContent = '';
+
+    if (database !== 'None') {
+        console.log(chalk.cyan(`Configuring ${database}...`));
+        const dbType = database.toLowerCase().replace('postgresql', 'postgresql');
+        const dbTemplate = readTemplate(path.join(__dirname, '..', 'templates', 'database', dbType, 'db.js'));
+        dbEnvContent = readTemplate(path.join(__dirname, '..', 'templates', 'database', dbType, 'env.txt'));
+
+        if (database === 'MongoDB') {
+            dbDeps = 'mongoose';
+            dbInitCode = "const connectDB = require('./config/db');\nconnectDB();";
+        } else if (database === 'PostgreSQL') {
+            dbDeps = 'pg';
+            dbInitCode = "const pool = require('./config/db');\n// pool.query('SELECT NOW()', (err, res) => { console.log('Postgres Connected'); pool.end(); });";
+        } else if (database === 'MySQL') {
+            dbDeps = 'mysql2';
+            dbInitCode = "const connection = require('./config/db');\n// Database connection is initialized in config/db.js";
+        }
+
+        createFile(path.join(serverPath, 'config', 'db.js'), dbTemplate);
+    }
+
     // Starter Files for Server
     const indexJsContent = `
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+
+${dbInitCode}
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -40,7 +67,14 @@ app.listen(port, () => {
 });
 `;
     createFile(path.join(serverPath, 'index.js'), indexJsContent);
-    createFile(path.join(serverPath, '.env'), 'PORT=5000\nMONGO_URI=your_mongodb_connection_string');
+    
+    let envContent = 'PORT=5000';
+    if (dbEnvContent) {
+        envContent += '\n' + dbEnvContent;
+    } else {
+        envContent += '\nMONGO_URI=your_mongodb_connection_string';
+    }
+    createFile(path.join(serverPath, '.env'), envContent);
 
     // README
     const readmeContent = `
@@ -48,7 +82,7 @@ app.listen(port, () => {
 
 ## MERN Stack Project
 - Client: React
-- Server: Express, Node.js, MongoDB
+- Server: Express, Node.js, ${database !== 'None' ? database : 'No Database'}
 
 ## Setup
 cd server
@@ -337,7 +371,7 @@ try {
         'mkdir server -ea 0',
         'cd server',
         'npm init -y',
-        'npm install express mongoose cors dotenv',
+        `npm install express ${dbDeps} cors dotenv`,
         'cd ..',
         frontendCmd,
         'node setup-ui.js',
