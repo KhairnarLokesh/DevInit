@@ -46,6 +46,17 @@ async function main() {
             }
         ]);
 
+        // 3b. Database Selection
+        const { dbChoice } = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'dbChoice',
+                message: 'Select Database Setup:',
+                choices: ['None', 'MongoDB', 'PostgreSQL', 'MySQL'],
+                default: 'None'
+            }
+        ]);
+
         let frontendOption = '';
         let language = 'JavaScript';
         let styling = 'Plain CSS';
@@ -106,7 +117,7 @@ async function main() {
         }
 
         console.log(chalk.green(`\nStarting ${stackChoice} setup...`));
-        console.log(chalk.cyan(`Options: Frontend=${frontendOption}, Lang=${language}, Style=${styling}, PM=${pkgManager}`));
+        console.log(chalk.cyan(`Options: Frontend=${frontendOption}, Lang=${language}, Style=${styling}, PM=${pkgManager}, DB=${dbChoice}`));
 
         // Initialize features array including chosen tech
         const finalFeatures = [...features];
@@ -115,16 +126,16 @@ async function main() {
 
         // Route to the appropriate setup function based on user choices
         if (frontendOption === 'Next.js') {
-            await setupNext(projectPath, projectName, projectParentPath, finalFeatures);
+            await setupNext(projectPath, projectName, projectParentPath, finalFeatures, dbChoice);
         } else if (stackChoice === 'MERN Stack') {
             // Pass the selected frontend option down to setupMern dynamically if needed
             finalFeatures.push(`Frontend:${frontendOption}`);
             finalFeatures.push(`PM:${pkgManager}`);
-            await setupMern(projectPath, projectName, finalFeatures);
+            await setupMern(projectPath, projectName, finalFeatures, dbChoice);
         } else if (stackChoice === 'MEAN Stack') {
             finalFeatures.push(`Frontend:${frontendOption}`);
             finalFeatures.push(`PM:${pkgManager}`);
-            await setupMean(projectPath, projectName, finalFeatures);
+            await setupMean(projectPath, projectName, finalFeatures, dbChoice);
         }
 
     } catch (error) {

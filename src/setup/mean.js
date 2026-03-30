@@ -1,9 +1,9 @@
 const chalk = require('chalk');
 const path = require('path');
-const { createDirectory, createFile } = require('../utils/fileUtils');
+const { createDirectory, createFile, appendToFile, readTemplate } = require('../utils/fileUtils');
 const { runCommandsSequentially } = require('../utils/terminalUtils');
 
-async function setupMean(projectPath, projectName, features) {
+async function setupMean(projectPath, projectName, features, database) {
     console.log(chalk.green('Creating MEAN project structure...'));
     
     // Create Root
@@ -11,14 +11,41 @@ async function setupMean(projectPath, projectName, features) {
 
     // Create Server Folders
     const serverPath = path.join(projectPath, 'server');
-    const folders = ['controllers', 'models', 'routes'];
+    const folders = ['controllers', 'models', 'routes', 'config'];
     folders.forEach(folder => createDirectory(path.join(serverPath, folder)));
+
+    // Database Setup
+    let dbDeps = '';
+    let dbInitCode = '';
+    let dbEnvContent = '';
+
+    if (database !== 'None') {
+        process.stdout.write(chalk.cyan(`Configuring ${database}...\n`));
+        const dbType = database.toLowerCase();
+        const dbTemplate = readTemplate(path.join(__dirname, '..', 'templates', 'database', dbType, 'db.js'));
+        dbEnvContent = readTemplate(path.join(__dirname, '..', 'templates', 'database', dbType, 'env.txt'));
+
+        if (database === 'MongoDB') {
+            dbDeps = 'mongoose';
+            dbInitCode = "const connectDB = require('./config/db');\nconnectDB();";
+        } else if (database === 'PostgreSQL') {
+            dbDeps = 'pg';
+            dbInitCode = "const pool = require('./config/db');";
+        } else if (database === 'MySQL') {
+            dbDeps = 'mysql2';
+            dbInitCode = "const connection = require('./config/db');";
+        }
+
+        createFile(path.join(serverPath, 'config', 'db.js'), dbTemplate);
+    }
 
     // Server files
     const indexJsContent = `
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+
+${dbInitCode}
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -35,7 +62,14 @@ app.listen(port, () => {
 });
 `;
     createFile(path.join(serverPath, 'index.js'), indexJsContent);
-    createFile(path.join(serverPath, '.env'), 'PORT=5000\nMONGO_URI=your_mongodb_connection_string');
+    
+    let envContent = 'PORT=5000';
+    if (dbEnvContent) {
+        envContent += '\n' + dbEnvContent;
+    } else {
+        envContent += '\nMONGO_URI=your_mongodb_connection_string';
+    }
+    createFile(path.join(serverPath, '.env'), envContent);
     
     // README
     const readmeContent = `
@@ -43,7 +77,7 @@ app.listen(port, () => {
 
 ## MEAN Stack Project
 - Client: Angular
-- Server: Express, Node.js, MongoDB
+- Server: Express, Node.js, ${database !== 'None' ? database : 'No Database'}
 
 ## Setup
 cd server
@@ -62,7 +96,7 @@ ng serve
         'mkdir server -ea 0',
         'cd server',
         'npm init -y',
-        'npm install express mongoose cors dotenv',
+        `npm install express ${dbDeps} cors dotenv`,
         'cd ..',
         'npx @angular/cli new client --defaults'
     ];
